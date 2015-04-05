@@ -5,23 +5,27 @@ import android.content.Context;
 import android.os.Handler;
 import android.widget.Toast;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.Reader;
 
 public class ConnectedThread extends Thread {
 
-    private final BluetoothSocket mmSocket;
-    private final InputStream mmInStream;
-    private final OutputStream mmOutStream;
+    private final BluetoothSocket mSocket;
+    private final InputStream is;
+    private final OutputStream os;
+    BufferedReader r;
 
     protected static final int MESSAGE_READ = 1;
     protected static final int MESSAGE_WRITE = 2;
 
     Handler mHandler;
+    Reader reader;
 
     public ConnectedThread(BluetoothSocket socket, Handler handler) {
-        mmSocket = socket;
+        mSocket = socket;
         InputStream tmpIn = null;
         OutputStream tmpOut = null;
 
@@ -32,29 +36,54 @@ public class ConnectedThread extends Thread {
             tmpOut = socket.getOutputStream();
         } catch (IOException e) { }
 
-        mmInStream = tmpIn;
-        mmOutStream = tmpOut;
+        is = tmpIn;
+        os = tmpOut;
         mHandler = handler;
     }
 
-    public void run() {
-
-        byte[] buffer = new byte[1024];
-        int bytes; // bytes returned from read()
-
+    /*public void run() {
+        int bytes;
         // Keep listening to the InputStream until an exception occurs
-        while (true){
+        while(true)  {
             try {
-                // Read from the InputStream
-                bytes = mmInStream.read(buffer);
-
-                // Reading finished
-                mHandler.obtainMessage(MESSAGE_READ, bytes, 0, buffer).sendToTarget();
-
+                bytes = is.read();
+                mHandler.obtainMessage(MESSAGE_READ, bytes).sendToTarget();
+                break;
             } catch (IOException e) {
                 e.printStackTrace();
             }
-
+        }
+    }*/
+    public void run() {
+        int bytes = 0, i = 0;
+        char ch[] = new char[100];
+        // Keep listening to the InputStream until an exception occurs
+        while(true)  {
+            try {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                while(is.available() > 0) {
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    bytes = is.read();
+                    ch[i] = (char) bytes;
+                    i++;
+                }
+                if(bytes > 0) {
+                    mHandler.obtainMessage(MESSAGE_READ, i, -1, ch).sendToTarget();
+                    ch = new char[100];
+                    i = 0;
+                    bytes = 0;
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -62,7 +91,7 @@ public class ConnectedThread extends Thread {
     public void write(byte[] bytes){
 
         try {
-            mmOutStream.write(bytes);
+            os.write(bytes);
            // mHandler.obtainMessage(MESSAGE_WRITE, -1, -1, bytes)
            //         .sendToTarget();
         } catch (IOException e) { }
@@ -72,7 +101,7 @@ public class ConnectedThread extends Thread {
     /* Call this from the main activity to shutdown the connection */
     public void cancel(Context context) {
         try {
-            mmSocket.close();
+            mSocket.close();
             Toast.makeText(context, "DISCONNECT", Toast.LENGTH_LONG).show();
         } catch (IOException e) { }
     }

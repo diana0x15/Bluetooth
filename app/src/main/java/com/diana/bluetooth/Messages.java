@@ -21,8 +21,10 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.Set;
 
-public class MainActivity extends Activity {
-
+/**
+ * Created by Diana on 06.04.2015.
+ */
+public class Messages extends Activity {
 
     private static final int REQUEST_ENABLE_BLUETOOTH = 3;
 
@@ -79,6 +81,7 @@ public class MainActivity extends Activity {
         requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
         setContentView(R.layout.activity_main);
 
+
         Init();
         mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -105,7 +108,7 @@ public class MainActivity extends Activity {
                         String address = info.substring(info.length() - 17);
 
                         // Create the result Intent and include the MAC address
-                        Intent intent = new Intent(MainActivity.this, MessagesActivity.class);
+                        Intent intent = new Intent(Messages.this, MessagesActivity.class);
                         intent.putExtra(EXTRA_DEVICE_ADDRESS, address);
                         startActivity(intent);
                     }
@@ -189,6 +192,5 @@ public class MainActivity extends Activity {
         }
         return super.onOptionsItemSelected(item);
     }
-
 
 }

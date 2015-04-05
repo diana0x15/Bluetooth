@@ -14,6 +14,8 @@ public class ConnectThread extends Thread {
 
     private static final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
     protected static final int SUCCESS_CONNECT = 0;
+    protected static final int FAIL_CONNECT = 3;
+
 
     BluetoothAdapter mBluetoothAdapter = MainActivity.mBluetoothAdapter;
 
@@ -50,6 +52,8 @@ public class ConnectThread extends Thread {
             // Unable to connect; close the socket and get out
             try {
                 mmSocket.close();
+                mHandler.obtainMessage(FAIL_CONNECT, mmSocket).sendToTarget();
+
             } catch (IOException closeException) { }
             return;
         }
@@ -59,19 +63,14 @@ public class ConnectThread extends Thread {
 
     }
 
-    public synchronized void connected(BluetoothSocket socket, BluetoothDevice device) {
-
-        // Start the thread to manage the connection and perform transmissions
-        mConnectedThread = new ConnectedThread(socket, mHandler);
-        mConnectedThread.start();
-
-    }
-
     /** Will cancel an in-progress connection, and close the socket */
     public void cancel(Context context) {
         try {
-            mmSocket.close();
-            Toast.makeText(context, "DISCONNECT", Toast.LENGTH_LONG).show();
+            if(mmSocket.isConnected()) {
+                mmSocket.close();
+                Toast.makeText(context, "DISCONNECT", Toast.LENGTH_LONG).show();
+            }
+
         } catch (IOException e) { }
     }
 }
