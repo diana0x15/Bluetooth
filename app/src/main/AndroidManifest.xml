@@ -24,11 +24,6 @@
             android:label="@string/title_activity_messages" >
         </activity>
         <activity
-            android:name=".Codes"
-            android:label="@string/title_activity_codes">
-
-        </activity>
-        <activity
             android:name=".Help"
             android:label="@string/title_activity_help"
             android:parentActivityName=".MessagesActivity" >

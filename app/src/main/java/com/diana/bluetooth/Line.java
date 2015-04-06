@@ -14,10 +14,13 @@ public class Line extends View {
     public Line(Context context, int X1, int Y1, int X2, int Y2) {
         super(context);
         mPaint = new Paint();
-        mPaint.setColor(Color.BLACK);
+
+        int c = Color.rgb(MessagesActivity.R, MessagesActivity.G, MessagesActivity.B);
+        mPaint.setColor(c);
+
         x1 = (float) X1;
-        x2 = (float) X2;
         y1 = (float) Y1;
+        x2 = (float) X2;
         y2 = (float) Y2;
     }
 

@@ -31,7 +31,8 @@ public class MessagesActivity extends Activity {
     ConnectedThread mConnectedThread;
     String deviceAddress;
 
-    int SIZE = -1, R, G, B;
+    static int R = 255, G = 255, B = 255, COUNT = 0;
+    static float SIZE = -1;
 
     static TextView text;
     FrameLayout layout;
@@ -72,7 +73,9 @@ public class MessagesActivity extends Activity {
 
     private void decode(char[] code) {
 
-        int x = 0, y = 0, r, x2, y2, h, w;
+        int x = 0, y = 0, r = 0, x2, y2, h, w;
+        View last = null;
+        COUNT++;
         switch(code[0]){
             case(1):// Set screen
                 x = code[1] - 48;
@@ -96,8 +99,10 @@ public class MessagesActivity extends Activity {
                 layout.setVisibility(View.VISIBLE);
                 if(SIZE == -1)
                     SIZE = layout.getHeight()/30;
+                x = 0;
+                y = 0;
                 break;
-            case(2): // Word
+            case(2): // Text
                 x = code[1] - 48;
                 x *= 10;
                 x += code[2] - 48;
@@ -118,10 +123,272 @@ public class MessagesActivity extends Activity {
                 for(int i = 9; i < code.length; ++i) {
                     s += code[i];
                 }
-                layout.addView(new Text(getApplicationContext(), x, y, SIZE, s));
+                last = new Text(getApplicationContext(), x, y, s, 0);
+                layout.addView(last);
+                x = 0;
+                y = 0;
+                s = "";
+
                 break;
-            default:
+            case(3):
+                x = code[1] - 48;
+                x *= 10;
+                x += code[2] - 48;
+                x*=10;
+                x += code[3] - 48;
+                x *= 10;
+                x += code[4] - 48;
+
+                y = code[5] - 48;
+                y *= 10;
+                y += code[6] - 48;
+                y *= 10;
+                y += code[7] - 48;
+                y *= 10;
+                y += code[8] - 48;
+
+                String S = "";
+                for(int i = 9; i < code.length; ++i) {
+                    S += code[i];
+                }
+                last = new Text(getApplicationContext(), x, y, S, 1);
+                layout.addView(last);
+
+                x = 0;
+                y = 0;
+                S = "";
                 break;
+            case(6): // Oval
+                x = code[1] - 48;
+                x *= 10;
+                x += code[2] - 48;
+                x*=10;
+                x += code[3] - 48;
+                x *= 10;
+                x += code[4] - 48;
+
+                y = code[5] - 48;
+                y *= 10;
+                y += code[6] - 48;
+                y *= 10;
+                y += code[7] - 48;
+                y *= 10;
+                y += code[8] - 48;
+
+                r = code[9] - 48;
+                r *= 10;
+                r += code[10] - 48;
+                r *= 10;
+                r += code[11] - 48;
+                r *= 10;
+                r += code[12] - 48;
+
+                last = new Oval(getApplicationContext(), x, y, r, 0);
+                layout.addView(last);
+
+                x = 0;
+                y = 0;
+                r = 0;
+                break;
+            case(7): // Filled Oval
+                x = code[1] - 48;
+                x *= 10;
+                x += code[2] - 48;
+                x*=10;
+                x += code[3] - 48;
+                x *= 10;
+                x += code[4] - 48;
+
+                y = code[5] - 48;
+                y *= 10;
+                y += code[6] - 48;
+                y *= 10;
+                y += code[7] - 48;
+                y *= 10;
+                y += code[8] - 48;
+
+                r = code[9] - 48;
+                r *= 10;
+                r += code[10] - 48;
+                r *= 10;
+                r += code[11] - 48;
+                r *= 10;
+                r += code[12] - 48;
+
+                last = new Oval(getApplicationContext(), x, y, r, 1);
+                layout.addView(last);
+                x = 0;
+                y = 0;
+                r = 0;
+                break;
+            case(8): // Rectangle
+                x = code[1] - 48;
+                x *= 10;
+                x += code[2] - 48;
+                x*=10;
+                x += code[3] - 48;
+                x *= 10;
+                x += code[4] - 48;
+
+                y = code[5] - 48;
+                y *= 10;
+                y += code[6] - 48;
+                y *= 10;
+                y += code[7] - 48;
+                y *= 10;
+                y += code[8] - 48;
+
+                h = code[9] - 48;
+                h *= 10;
+                h += code[10] - 48;
+                h *=10;
+                h += code[11] - 48;
+                h *= 10;
+                h += code[12] - 48;
+
+                w = code[13] - 48;
+                w *= 10;
+                w += code[14] - 48;
+                w *= 10;
+                w += code[15] - 48;
+                w *= 10;
+                w += code[16] - 48;
+
+                last = new Rectangle(getApplicationContext(), x, y, h, w, 0);
+                layout.addView(last);
+
+                x = 0;
+                y = 0;
+                h = 0;
+                w = 0;
+                break;
+            case(9): // Filled Rectangle
+                x = code[1] - 48;
+                x *= 10;
+                x += code[2] - 48;
+                x*=10;
+                x += code[3] - 48;
+                x *= 10;
+                x += code[4] - 48;
+
+                y = code[5] - 48;
+                y *= 10;
+                y += code[6] - 48;
+                y *= 10;
+                y += code[7] - 48;
+                y *= 10;
+                y += code[8] - 48;
+
+                h = code[9] - 48;
+                h *= 10;
+                h += code[10] - 48;
+                h *=10;
+                h += code[11] - 48;
+                h *= 10;
+                h += code[12] - 48;
+
+                w = code[13] - 48;
+                w *= 10;
+                w += code[14] - 48;
+                w *= 10;
+                w += code[15] - 48;
+                w *= 10;
+                w += code[16] - 48;
+
+                last = new Rectangle(getApplicationContext(), x, y, h, w, 1);
+                layout.addView(last);
+
+                x = 0;
+                y = 0;
+                h = 0;
+                w = 0;
+                break;
+            case(10): // Line
+                x = code[1] - 48;
+                x *= 10;
+                x += code[2] - 48;
+                x*=10;
+                x += code[3] - 48;
+                x *= 10;
+                x += code[4] - 48;
+
+                y = code[5] - 48;
+                y *= 10;
+                y += code[6] - 48;
+                y *= 10;
+                y += code[7] - 48;
+                y *= 10;
+                y += code[8] - 48;
+
+                x2 = code[9] - 48;
+                x2 *= 10;
+                x2 += code[10] - 48;
+                x2 *=10;
+                x2 += code[11] - 48;
+                x2 *= 10;
+                x2 += code[12] - 48;
+
+                y2 = code[13] - 48;
+                y2 *= 10;
+                y2 += code[14] - 48;
+                y2 *= 10;
+                y2 += code[15] - 48;
+                y2 *= 10;
+                y2 += code[16] - 48;
+
+                last = new Line(getApplicationContext(), x, y, x2, y2);
+                layout.addView(last);
+
+                x = 0;
+                y = 0;
+                x2 = 0;
+                y2 = 0;
+                break;
+            case(11): // Change size
+                x = code[1] - 48;
+                x *= 10;
+                x += code[2] - 48;
+                SIZE = x;
+                break;
+            case(12): // Change color
+                x = code[1] - 48;
+                x *= 10;
+                x += code[2] - 48;
+                x *= 10;
+                x += code[3] - 48;
+
+                y = code[4] - 48;
+                y *= 10;
+                y += code[5] - 48;
+                y *= 10;
+                y += code[6] - 48;
+
+                x2 = code[7] - 48;
+                x2 *= 10;
+                x2 += code[8] - 48;
+                x2 *=10;
+                x2 += code[9] - 48;
+
+                R = x;
+                G = y;
+                B = x2;
+                x = 0;
+                y = 0;
+                x2 = 0;
+                break;
+            case (13): // Undo
+                layout.removeView(last);
+                break;
+            case (14): // Clear Screen
+                layout.removeAllViews();
+                break;
+
+            case (15): // Button type 1
+                break;
+
+            case (16): // Button type 2
+                break;
+
         }
 
     }

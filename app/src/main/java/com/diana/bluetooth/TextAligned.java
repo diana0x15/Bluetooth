@@ -4,25 +4,26 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Typeface;
 import android.view.View;
 
-/**
- * Created by Diana on 25.03.2015.
- */
-public class Oval extends View {
+public class TextAligned extends View {
 
     float x, y;
-    float r;
+    String text;
     Paint mPaint;
 
     // coordinates (x, y), radius
-    public Oval(Context context, int X, int Y, int R, int type) {
+    public TextAligned (Context context, int X, int Y, String S) {
         super(context);
         x = ((float) X);
         y = ((float) Y);
-        r = ((float) R);
+        text = S;
         mPaint = new Paint();
-        if(type == 0) mPaint.setStyle(Paint.Style.STROKE);
+        mPaint.setTextSize(MessagesActivity.SIZE);
+
+        Typeface typeface = Typeface.create("Consolas", Typeface.NORMAL);
+        mPaint.setTypeface(typeface);
 
         int c = Color.rgb(MessagesActivity.R, MessagesActivity.G, MessagesActivity.B);
         mPaint.setColor(c);
@@ -31,6 +32,6 @@ public class Oval extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        canvas.drawCircle(x, y, r, mPaint);
+        canvas.drawText(text, x, y, mPaint);
     }
 }

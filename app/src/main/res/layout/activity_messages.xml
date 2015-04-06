@@ -3,6 +3,7 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#000000"
     tools:context=".MessagesActivity" >
 
     <TextView
@@ -10,6 +11,7 @@
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:id="@+id/textView"
+        android:textColor="#FFFFFF"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true" />
 
@@ -18,7 +20,7 @@
         android:layout_height="match_parent"
         android:id = "@+id/frameLayout"
         android:visibility="invisible"
-        android:background="#D1E1E1"
+        android:background="#101010"
         android:layout_centerHorizontal="true"/>
 
 </RelativeLayout>
