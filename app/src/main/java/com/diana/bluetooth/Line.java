@@ -15,7 +15,7 @@ public class Line extends View {
         super(context);
         mPaint = new Paint();
 
-        int c = Color.rgb(MessagesActivity.R, MessagesActivity.G, MessagesActivity.B);
+        int c = Color.rgb(MessagesActivity.r, MessagesActivity.g, MessagesActivity.b);
         mPaint.setColor(c);
 
         x1 = (float) X1;

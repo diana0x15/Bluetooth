@@ -68,7 +68,7 @@ public class ConnectThread extends Thread {
         try {
             if(mmSocket.isConnected()) {
                 mmSocket.close();
-                Toast.makeText(context, "DISCONNECT", Toast.LENGTH_LONG).show();
+                Toast.makeText(context, "DISCONNECTED", Toast.LENGTH_LONG).show();
             }
 
         } catch (IOException e) { }

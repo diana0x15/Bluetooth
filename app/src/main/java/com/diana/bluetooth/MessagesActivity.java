@@ -3,15 +3,29 @@ package com.diana.bluetooth;
 import android.app.Activity;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.Point;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.text.method.ScrollingMovementMethod;
+import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
+import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -31,11 +45,29 @@ public class MessagesActivity extends Activity {
     ConnectedThread mConnectedThread;
     String deviceAddress;
 
-    static int R = 255, G = 255, B = 255, COUNT = 0;
-    static float SIZE = -1;
+    static int r = 255, g = 255, b = 255;
+    static int SIZE = 30, COUNT = 0;
+    int X = 0, Y = 0, H = 0, W = 0, R = 0, LAYWIDTH = 0, yy = 0;
+    char[] C = new char[100000];
+    int index = 0;
+    String nr = "";
+    String text1 = "", text2 = "";
 
-    static TextView text;
-    FrameLayout layout;
+    Typeface temp;
+    int lines;
+    Display display;
+    Point size;
+
+    View view = null;
+
+    TextView text, LAST;
+    EditText edit1, edit2;
+    static boolean LONG = false, BUTTON = false, BUTTONTYPE = false;
+    Button[] buttons = new Button[40];
+    int btnIndex = 0;
+    static FrameLayout layout;
+    RelativeLayout relativeLayout;
+
 
     Handler mHandler = new Handler() {
         @Override
@@ -52,15 +84,385 @@ public class MessagesActivity extends Activity {
                     break;
 
                 case MESSAGE_READ:
-                    char[] c = (char[])msg.obj;
-                    text.setText(c, 0, msg.arg1);
-                    decode(c);
+                    int type = (int)msg.obj;
+                    if( LAYWIDTH == 0 && ((type > 1 && type < 10) || type == 22))
+                        break;
+                    switch(type){
+                        case(-3): // Button Type
+                            btnIndex = ConnectedThread.BYTE;
+                            buttons[btnIndex].setX(ConnectedThread.X);
+                            buttons[btnIndex].setY(ConnectedThread.Y);
+                            buttons[btnIndex].setVisibility(View.VISIBLE);
+                            BUTTONTYPE = false;
+                            BUTTON = true;
+                            break;
+                        case(-2):// NewLine
+                            if(BUTTON == true){
+                                buttons[btnIndex].append("\n");
+                            }
+                            else {
+                                if (LONG == true) {
+                                    LAST.append("\n");
+                                    C[index] = 13;
+                                    index++;
+                                }
+                                else {
+                                    yy = (int) LAST.getY();
+                                    temp = LAST.getTypeface();
+                                    lines = LAST.getLineCount();
+                                    LAST = new TextView(getApplicationContext());
+                                    LAST.setX(0);
+                                    LAST.setY(yy + SIZE + 2);
+                                    LAST.setTextSize(SIZE);
+                                    LAST.setTextColor(Color.rgb(r, g, b));
+                                    LAST.setSingleLine();
+                                    LAST.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
+                                            LinearLayout.LayoutParams.WRAP_CONTENT));
+                                    LAST.setTypeface(temp);
+                                    layout.addView(LAST);
+                                    view = LAST;
+                                }
+                            }
+                            break;
+                        case(-1): // Letter
+                            char ch = (char) ConnectedThread.BYTE;
+                            if(BUTTON == true){
+                                buttons[btnIndex].append(ch + "");
+                            }
+                            else {
+                                LAST.append(ch + "");
+                                    if (LAST.getRight() + LAST.getX() >= LAYWIDTH - SIZE) {
+                                        if (ch == ' ') break;
+                                        yy = (int) LAST.getY();
+                                        temp = LAST.getTypeface();
+                                        LAST.setSingleLine();
+                                        LAST = new TextView(getApplicationContext());
+                                        LAST.setX(0);
+                                        LAST.setY(yy + SIZE + 2);
+                                        LAST.setTextSize(SIZE);
+                                        LAST.setTextColor(Color.rgb(r, g, b));
+                                        LAST.setTypeface(temp);
+                                        LAST.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
+                                                LinearLayout.LayoutParams.WRAP_CONTENT));
+                                        layout.addView(LAST);
+                                        view = LAST;
+                                    }
+                            }
+                            break;
+                        case(1): // Set Screen
+                            relativeLayout.removeAllViews();
+                            layout = new FrameLayout(getApplicationContext());
+                            layout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
+                                    LinearLayout.LayoutParams.MATCH_PARENT));
+                            layout.setBackgroundColor(Color.rgb(15, 15, 15));
+                            layout.setVisibility(View.INVISIBLE);
+                            X = ConnectedThread.X;
+                            Y = ConnectedThread.Y;
+                            H = ConnectedThread.H;
+                            W = ConnectedThread.W;
+                            layout.getLayoutParams().height = X;
+                            layout.getLayoutParams().width = Y;
+
+                            layout.setX(H);
+                            layout.setY(W);
+                            layout.setVisibility(View.VISIBLE);
+                            relativeLayout.addView(layout);
+                            buttonsInit();
+                            LAYWIDTH = Y;
+                            break;
+                        case(2): // Text
+                            if(LONG == true){
+                                layout.removeView(LAST);
+                                LONG = false;
+                            }
+                            BUTTON = false;
+                            LAST = new TextView(getApplicationContext());
+                            LAST.setX(ConnectedThread.X);
+                            LAST.setY(ConnectedThread.Y);
+                            LAST.setTextSize(SIZE);
+                            LAST.setSingleLine();
+                            LAST.setTextColor(Color.rgb(r, g, b));
+                            LAST.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
+                                    LinearLayout.LayoutParams.WRAP_CONTENT));
+                            layout.addView(LAST);
+                            view = LAST;
+                            break;
+                        case(3): // Monospaced Text
+                            if(LONG == true){
+                                layout.removeView(LAST);
+                                LONG = false;
+                            }
+                            BUTTON = false;
+                            LAST = new TextView(getApplicationContext());
+                            LAST.setX(ConnectedThread.X);
+                            LAST.setY(ConnectedThread.Y);
+                            LAST.setTextSize(SIZE);
+                            LAST.setTypeface(Typeface.MONOSPACE);
+                            LAST.setTextColor(Color.rgb(r, g, b));
+                            LAST.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
+                                    LinearLayout.LayoutParams.WRAP_CONTENT));
+                            layout.addView(LAST);
+                            view = LAST;
+                            break;
+                        case(5): // Oval
+                            if(LONG == true){
+                                layout.removeView(LAST);
+                                LONG = false;
+                            }
+                            X = ConnectedThread.X;
+                            Y = ConnectedThread.Y;
+                            R = ConnectedThread.R;
+                            view = new Oval(getApplicationContext(), X, Y, R, 0);
+                            layout.addView(view);
+                            break;
+                        case(6): // Filled Oval
+                            if(LONG == true){
+                                layout.removeView(LAST);
+                                LONG = false;
+                            }
+                            X = ConnectedThread.X;
+                            Y = ConnectedThread.Y;
+                            R = ConnectedThread.R;
+                            view = new Oval(getApplicationContext(), X, Y, R, 1);
+                            layout.addView(view);
+                            break;
+                        case(7): // Rectangle
+                            if(LONG == true){
+                                layout.removeView(LAST);
+                                LONG = false;
+                            }
+                            X = ConnectedThread.X;
+                            Y = ConnectedThread.Y;
+                            H = ConnectedThread.H;
+                            W = ConnectedThread.W;
+                            view = new Rectangle(getApplicationContext(), X, Y, W, H, 0);
+                            layout.addView(view);
+                            break;
+                        case(8): // Filled Rectangle
+                            if(LONG == true){
+                                layout.removeView(LAST);
+                                LONG = false;
+                            }
+                            X = ConnectedThread.X;
+                            Y = ConnectedThread.Y;
+                            H = ConnectedThread.H;
+                            W = ConnectedThread.W;
+                            view = new Rectangle(getApplicationContext(), X, Y, W, H, 1);
+                            layout.addView(view);
+                            break;
+                        case(9): // Line
+                            if(LONG == true){
+                                layout.removeView(LAST);
+                                LONG = false;
+                            }
+                            X = ConnectedThread.X;
+                            Y = ConnectedThread.Y;
+                            H = ConnectedThread.H;
+                            W = ConnectedThread.W;
+                            view = new Line(getApplicationContext(), X, Y, H, W);
+                            layout.addView(view);
+                            break;
+                        case(10): // Font Size
+                            SIZE = ConnectedThread.X;
+                            break;
+                        case(11): // Color
+                            r = ConnectedThread.R;
+                            g = ConnectedThread.X;
+                            b = ConnectedThread.Y;
+                            break;
+                        case(12): // Undo
+                            if(view != null) {
+                                layout.removeView(view);
+                            }
+                            break;
+                        case(14): // Clear Screen
+                            layout.removeAllViews();
+                            break;
+                        case(15):
+                            LONG = false;
+                            BUTTONTYPE = true;
+                            break;
+                        case(16):
+                            edit1.requestFocus();
+                            edit1.addTextChangedListener(new TextWatcher() {
+                                @Override
+                                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                                }
+
+                                @Override
+                                public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+                                    mConnectedThread.write((edit1.getText().toString().charAt(edit1.getText().length() - 1) + "").getBytes());
+
+                                }
+
+                                @Override
+                                public void afterTextChanged(Editable s) {
+                                }
+                            });
+                            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                            imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
+                            break;
+                        case(17):
+                            edit2.requestFocus();
+                            edit2.addTextChangedListener(new TextWatcher() {
+                                @Override
+                                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                                }
+
+                                @Override
+                                public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+                                    mConnectedThread.write((edit2.getText().toString().charAt(edit2.getText().length() - 1) + "").getBytes());
+
+                                }
+
+                                @Override
+                                public void afterTextChanged(Editable s) {
+                                }
+                            });
+                            InputMethodManager imm2 = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                            imm2.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
+                            break;
+                        case(18):
+                            nr = "";
+                            nr = Integer.toString(ConnectedThread.NR);
+                            for(int i = 0; i < nr.length(); ++i) {
+                                ch = nr.charAt(i);
+                                if(BUTTON == true){
+                                    buttons[btnIndex].append(ch+"");
+                                }
+                                else {
+                                    LAST.append(ch+"");
+                                    if (LAST.getRight() + LAST.getX() >= LAYWIDTH - SIZE) {
+                                        yy = (int) LAST.getY();
+                                        temp = LAST.getTypeface();
+                                        LAST.setSingleLine();
+                                        LAST = new TextView(getApplicationContext());
+                                        LAST.setX(0);
+                                        LAST.setY(yy + SIZE + 2);
+                                        LAST.setTextSize(SIZE);
+                                        LAST.setTextColor(Color.rgb(r, g, b));
+                                        LAST.setTypeface(temp);
+                                        LAST.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
+                                                LinearLayout.LayoutParams.WRAP_CONTENT));
+                                        layout.addView(LAST);
+                                        view = LAST;
+                                    }
+                                }
+                            }
+                            break;
+                        case(19):
+                            nr = "";
+                            nr = Integer.toString(ConnectedThread.NR);
+                            for(int i = 0; i < nr.length(); ++i) {
+                                ch = nr.charAt(i);
+                                if(BUTTON == true){
+                                    buttons[btnIndex].append(ch+"");
+                                }
+                                else {
+                                    LAST.append(ch+"");
+                                    if (LAST.getRight() + LAST.getX() >= LAYWIDTH - SIZE) {
+                                        yy = (int) LAST.getY();
+                                        temp = LAST.getTypeface();
+                                        LAST.setSingleLine();
+                                        LAST = new TextView(getApplicationContext());
+                                        LAST.setX(0);
+                                        LAST.setY(yy + SIZE + 2);
+                                        LAST.setTextSize(SIZE);
+                                        LAST.setTextColor(Color.rgb(r, g, b));
+                                        LAST.setTypeface(temp);
+                                        LAST.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
+                                                LinearLayout.LayoutParams.WRAP_CONTENT));
+                                        layout.addView(LAST);
+                                        view = LAST;
+                                    }
+                                }
+                            }
+                            break;
+                        case(20):
+                            nr = "";
+                            nr = Integer.toString(ConnectedThread.NR);
+                            for(int i = 0; i < nr.length(); ++i) {
+                                ch = nr.charAt(i);
+                                if(BUTTON == true){
+                                    buttons[btnIndex].append(ch+"");
+                                }
+                                else {
+                                    LAST.append(ch+"");
+                                    if (LAST.getRight() + LAST.getX() >= LAYWIDTH - SIZE) {
+                                        yy = (int) LAST.getY();
+                                        temp = LAST.getTypeface();
+                                        LAST.setSingleLine();
+                                        LAST = new TextView(getApplicationContext());
+                                        LAST.setX(0);
+                                        LAST.setY(yy + SIZE + 2);
+                                        LAST.setTextSize(SIZE);
+                                        LAST.setTextColor(Color.rgb(r, g, b));
+                                        LAST.setTypeface(temp);
+                                        LAST.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
+                                                LinearLayout.LayoutParams.WRAP_CONTENT));
+                                        layout.addView(LAST);
+                                        view = LAST;
+                                    }
+                                }
+                            }
+
+                            break;
+                        case(21):
+                            nr = "";
+                            nr = ConnectedThread.Bin;
+                            for(int i = 0; i < nr.length(); ++i) {
+                                ch = nr.charAt(i);
+                                if(BUTTON == true){
+                                    buttons[btnIndex].append(ch+"");
+                                }
+                                else {
+                                    LAST.append(ch+"");
+                                    if (LAST.getRight() + LAST.getX() >= LAYWIDTH - SIZE) {
+                                        yy = (int) LAST.getY();
+                                        temp = LAST.getTypeface();
+                                        LAST.setSingleLine();
+                                        LAST = new TextView(getApplicationContext());
+                                        LAST.setX(0);
+                                        LAST.setY(yy + SIZE + 2);
+                                        LAST.setTextSize(SIZE);
+                                        LAST.setTextColor(Color.rgb(r, g, b));
+                                        LAST.setTypeface(temp);
+                                        LAST.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
+                                                LinearLayout.LayoutParams.WRAP_CONTENT));
+                                        layout.addView(LAST);
+                                        view = LAST;
+                                    }
+                                }
+                            }
+                            break;
+                        case(22): // Long Text
+                            if(LONG == true){
+                                layout.removeView(LAST);
+                                LONG = false;
+                            }
+                            BUTTON = false;
+                            LONG = true;
+                            layout.removeAllViews();
+                            LAST = new TextView(getApplicationContext());
+                            LAST.setX(0);
+                            LAST.setY(0);
+                            LAST.setTextSize(SIZE);
+                            LAST.setTypeface(Typeface.MONOSPACE);
+                            LAST.setTextColor(Color.rgb(r, g, b));
+                            LAST.setBackgroundColor(Color.rgb(15, 15, 15));
+                            LAST.setMovementMethod(new ScrollingMovementMethod());
+                            LAST.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
+                                    LinearLayout.LayoutParams.WRAP_CONTENT));
+                            layout.addView(LAST);
+                            view = LAST;
+                            break;
+                    }
                     break;
 
                 case MESSAGE_WRITE:
-                    byte[] writeBuf = (byte[]) msg.obj;
-                    // construct a string from the buffer
-                    String writeMessage = new String(writeBuf);
+
                     break;
 
                 case FAIL_CONNECT:
@@ -70,337 +472,6 @@ public class MessagesActivity extends Activity {
             }
         }
     };
-
-    private void decode(char[] code) {
-
-        int x = 0, y = 0, r = 0, x2, y2, h, w;
-        View last = null;
-        COUNT++;
-        switch(code[0]){
-            case(1):// Set screen
-                x = code[1] - 48;
-                x *= 10;
-                x += code[2] - 48;
-                x*=10;
-                x += code[3] - 48;
-                x *= 10;
-                x += code[4] - 48;
-
-                y = code[5] - 48;
-                y *= 10;
-                y += code[6] - 48;
-                y *= 10;
-                y += code[7] - 48;
-                y *= 10;
-                y += code[8] - 48;
-
-                layout.getLayoutParams().height = x;
-                layout.getLayoutParams().width = y;
-                layout.setVisibility(View.VISIBLE);
-                if(SIZE == -1)
-                    SIZE = layout.getHeight()/30;
-                x = 0;
-                y = 0;
-                break;
-            case(2): // Text
-                x = code[1] - 48;
-                x *= 10;
-                x += code[2] - 48;
-                x*=10;
-                x += code[3] - 48;
-                x *= 10;
-                x += code[4] - 48;
-
-                y = code[5] - 48;
-                y *= 10;
-                y += code[6] - 48;
-                y *= 10;
-                y += code[7] - 48;
-                y *= 10;
-                y += code[8] - 48;
-
-                String s = "";
-                for(int i = 9; i < code.length; ++i) {
-                    s += code[i];
-                }
-                last = new Text(getApplicationContext(), x, y, s, 0);
-                layout.addView(last);
-                x = 0;
-                y = 0;
-                s = "";
-
-                break;
-            case(3):
-                x = code[1] - 48;
-                x *= 10;
-                x += code[2] - 48;
-                x*=10;
-                x += code[3] - 48;
-                x *= 10;
-                x += code[4] - 48;
-
-                y = code[5] - 48;
-                y *= 10;
-                y += code[6] - 48;
-                y *= 10;
-                y += code[7] - 48;
-                y *= 10;
-                y += code[8] - 48;
-
-                String S = "";
-                for(int i = 9; i < code.length; ++i) {
-                    S += code[i];
-                }
-                last = new Text(getApplicationContext(), x, y, S, 1);
-                layout.addView(last);
-
-                x = 0;
-                y = 0;
-                S = "";
-                break;
-            case(6): // Oval
-                x = code[1] - 48;
-                x *= 10;
-                x += code[2] - 48;
-                x*=10;
-                x += code[3] - 48;
-                x *= 10;
-                x += code[4] - 48;
-
-                y = code[5] - 48;
-                y *= 10;
-                y += code[6] - 48;
-                y *= 10;
-                y += code[7] - 48;
-                y *= 10;
-                y += code[8] - 48;
-
-                r = code[9] - 48;
-                r *= 10;
-                r += code[10] - 48;
-                r *= 10;
-                r += code[11] - 48;
-                r *= 10;
-                r += code[12] - 48;
-
-                last = new Oval(getApplicationContext(), x, y, r, 0);
-                layout.addView(last);
-
-                x = 0;
-                y = 0;
-                r = 0;
-                break;
-            case(7): // Filled Oval
-                x = code[1] - 48;
-                x *= 10;
-                x += code[2] - 48;
-                x*=10;
-                x += code[3] - 48;
-                x *= 10;
-                x += code[4] - 48;
-
-                y = code[5] - 48;
-                y *= 10;
-                y += code[6] - 48;
-                y *= 10;
-                y += code[7] - 48;
-                y *= 10;
-                y += code[8] - 48;
-
-                r = code[9] - 48;
-                r *= 10;
-                r += code[10] - 48;
-                r *= 10;
-                r += code[11] - 48;
-                r *= 10;
-                r += code[12] - 48;
-
-                last = new Oval(getApplicationContext(), x, y, r, 1);
-                layout.addView(last);
-                x = 0;
-                y = 0;
-                r = 0;
-                break;
-            case(8): // Rectangle
-                x = code[1] - 48;
-                x *= 10;
-                x += code[2] - 48;
-                x*=10;
-                x += code[3] - 48;
-                x *= 10;
-                x += code[4] - 48;
-
-                y = code[5] - 48;
-                y *= 10;
-                y += code[6] - 48;
-                y *= 10;
-                y += code[7] - 48;
-                y *= 10;
-                y += code[8] - 48;
-
-                h = code[9] - 48;
-                h *= 10;
-                h += code[10] - 48;
-                h *=10;
-                h += code[11] - 48;
-                h *= 10;
-                h += code[12] - 48;
-
-                w = code[13] - 48;
-                w *= 10;
-                w += code[14] - 48;
-                w *= 10;
-                w += code[15] - 48;
-                w *= 10;
-                w += code[16] - 48;
-
-                last = new Rectangle(getApplicationContext(), x, y, h, w, 0);
-                layout.addView(last);
-
-                x = 0;
-                y = 0;
-                h = 0;
-                w = 0;
-                break;
-            case(9): // Filled Rectangle
-                x = code[1] - 48;
-                x *= 10;
-                x += code[2] - 48;
-                x*=10;
-                x += code[3] - 48;
-                x *= 10;
-                x += code[4] - 48;
-
-                y = code[5] - 48;
-                y *= 10;
-                y += code[6] - 48;
-                y *= 10;
-                y += code[7] - 48;
-                y *= 10;
-                y += code[8] - 48;
-
-                h = code[9] - 48;
-                h *= 10;
-                h += code[10] - 48;
-                h *=10;
-                h += code[11] - 48;
-                h *= 10;
-                h += code[12] - 48;
-
-                w = code[13] - 48;
-                w *= 10;
-                w += code[14] - 48;
-                w *= 10;
-                w += code[15] - 48;
-                w *= 10;
-                w += code[16] - 48;
-
-                last = new Rectangle(getApplicationContext(), x, y, h, w, 1);
-                layout.addView(last);
-
-                x = 0;
-                y = 0;
-                h = 0;
-                w = 0;
-                break;
-            case(10): // Line
-                x = code[1] - 48;
-                x *= 10;
-                x += code[2] - 48;
-                x*=10;
-                x += code[3] - 48;
-                x *= 10;
-                x += code[4] - 48;
-
-                y = code[5] - 48;
-                y *= 10;
-                y += code[6] - 48;
-                y *= 10;
-                y += code[7] - 48;
-                y *= 10;
-                y += code[8] - 48;
-
-                x2 = code[9] - 48;
-                x2 *= 10;
-                x2 += code[10] - 48;
-                x2 *=10;
-                x2 += code[11] - 48;
-                x2 *= 10;
-                x2 += code[12] - 48;
-
-                y2 = code[13] - 48;
-                y2 *= 10;
-                y2 += code[14] - 48;
-                y2 *= 10;
-                y2 += code[15] - 48;
-                y2 *= 10;
-                y2 += code[16] - 48;
-
-                last = new Line(getApplicationContext(), x, y, x2, y2);
-                layout.addView(last);
-
-                x = 0;
-                y = 0;
-                x2 = 0;
-                y2 = 0;
-                break;
-            case(11): // Change size
-                x = code[1] - 48;
-                x *= 10;
-                x += code[2] - 48;
-                SIZE = x;
-                break;
-            case(12): // Change color
-                x = code[1] - 48;
-                x *= 10;
-                x += code[2] - 48;
-                x *= 10;
-                x += code[3] - 48;
-
-                y = code[4] - 48;
-                y *= 10;
-                y += code[5] - 48;
-                y *= 10;
-                y += code[6] - 48;
-
-                x2 = code[7] - 48;
-                x2 *= 10;
-                x2 += code[8] - 48;
-                x2 *=10;
-                x2 += code[9] - 48;
-
-                R = x;
-                G = y;
-                B = x2;
-                x = 0;
-                y = 0;
-                x2 = 0;
-                break;
-            case (13): // Undo
-                layout.removeView(last);
-                break;
-            case (14): // Clear Screen
-                layout.removeAllViews();
-                break;
-
-            case (15): // Button type 1
-                break;
-
-            case (16): // Button type 2
-                break;
-
-        }
-
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-
-        if (mConnectThread != null) {
-            mConnectThread.cancel(getApplicationContext());
-        }
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -421,10 +492,130 @@ public class MessagesActivity extends Activity {
         mConnectThread = new ConnectThread(connectedDevice, mHandler);
         mConnectThread.start();
         setContentView(com.diana.bluetooth.R.layout.activity_messages);
-        text = (TextView) findViewById(com.diana.bluetooth.R.id.textView);
-        text.setText("Connecting...");
-        layout = (FrameLayout) findViewById(com.diana.bluetooth.R.id.frameLayout);
 
+        text = (TextView) findViewById(com.diana.bluetooth.R.id.textView);
+        text.setTextSize(15);
+        text.setText("Connecting...");
+
+        relativeLayout = (RelativeLayout) findViewById(com.diana.bluetooth.R.id.relativeLayout);
+
+        display = getWindowManager().getDefaultDisplay();
+        size = new Point();
+        display.getSize(size);
+
+        buttonsInit();
+
+        edit1 = (EditText) findViewById(com.diana.bluetooth.R.id.editText);
+        edit2 = (EditText) findViewById(com.diana.bluetooth.R.id.editText2);
+        edit1.clearFocus();
+        edit2.clearFocus();
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
+
+    }
+
+    private void buttonsInit() {
+
+        for(int i = 1; i < 32; ++i){
+            buttons[i] = new Button(getApplicationContext());
+            buttons[i].setVisibility(View.INVISIBLE);
+            buttons[i].setBackground(getResources().getDrawable(com.diana.bluetooth.R.drawable.button));
+            buttons[i].setTextColor(Color.BLACK);
+            relativeLayout.addView(buttons[i]);
+        }
+        buttons[1].setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mConnectedThread.write("1".getBytes());
+            }
+        });
+        buttons[2].setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mConnectedThread.write("2".getBytes());
+            }
+        });
+        buttons[3].setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mConnectedThread.write("3".getBytes());
+            }
+        });
+        buttons[4].setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mConnectedThread.write("4".getBytes());
+            }
+        });
+        buttons[5].setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mConnectedThread.write("5".getBytes());
+            }
+        });
+        buttons[6].setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mConnectedThread.write("6".getBytes());
+            }
+        });
+        buttons[7].setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mConnectedThread.write("7".getBytes());
+            }
+        });
+        buttons[8].setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mConnectedThread.write("8".getBytes());
+            }
+        });
+        buttons[9].setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mConnectedThread.write("9".getBytes());
+            }
+        });
+        buttons[10].setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mConnectedThread.write("10".getBytes());
+            }
+        });
+        buttons[11].setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mConnectedThread.write("11".getBytes());
+            }
+        });
+        buttons[12].setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mConnectedThread.write("12".getBytes());
+            }
+        });
+        buttons[14].setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mConnectedThread.write("14".getBytes());
+            }
+        });
+        buttons[15].setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mConnectedThread.write("15".getBytes());
+            }
+        });
+    }
+
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        if (mConnectThread != null) {
+            mConnectThread.cancel(getApplicationContext());
+        }
     }
 
     @Override

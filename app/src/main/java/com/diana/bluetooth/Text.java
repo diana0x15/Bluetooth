@@ -29,8 +29,10 @@ public class Text extends View {
             mPaint.setTypeface(Typeface.MONOSPACE);
         }
 
-        int c = Color.rgb(MessagesActivity.R, MessagesActivity.G, MessagesActivity.B);
+        int c = Color.rgb(MessagesActivity.r, MessagesActivity.g, MessagesActivity.b);
         mPaint.setColor(c);
+
+
     }
 
     @Override

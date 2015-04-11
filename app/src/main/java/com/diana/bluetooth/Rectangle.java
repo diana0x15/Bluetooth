@@ -21,7 +21,7 @@ public class Rectangle extends View {
         mPaint = new Paint();
         if(type == 0) mPaint.setStyle(Paint.Style.STROKE);
 
-        int c = Color.rgb(MessagesActivity.R, MessagesActivity.G, MessagesActivity.B);
+        int c = Color.rgb(MessagesActivity.r, MessagesActivity.g, MessagesActivity.b);
         mPaint.setColor(c);
     }
 

@@ -4,23 +4,34 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#000000"
+    android:id="@+id/relativeLayout"
     tools:context=".MessagesActivity" >
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceLarge"
         android:id="@+id/textView"
         android:textColor="#FFFFFF"
         android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true" />
-
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:id = "@+id/frameLayout"
-        android:visibility="invisible"
-        android:background="#101010"
         android:layout_centerHorizontal="true"/>
+
+    <EditText
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:id="@+id/editText"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+
+    <EditText
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:inputType="number"
+        android:ems="10"
+        android:id="@+id/editText2"
+        android:layout_alignBottom="@+id/editText"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true" />
+
 
 </RelativeLayout>
